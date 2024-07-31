@@ -1,0 +1,98 @@
+//C++ Language
+
+#include <iostream>
+
+using namespace std;
+
+int maximum = 1000000;  // Here we have assumed a maximum value to prevent overflow in calculating the minimum cost
+
+int steps [24][24];
+int cache [24][1 << (24)];
+
+int solve (int k, int num, int box)
+{
+    // This if condition is for the base case
+    // When only 1st bit and kth bit are set in our box, it implies that we have visited all the other nodes before
+    if (box == ((1 << k) | 3))
+        return steps [1][k];
+
+    if (cache [k][box] != 0)
+        return cache [k][box];
+
+    int answer = maximum;   // The minimum cost for traversing all the nodes
+
+    /*  In order to find the minimum cost, we have to traverse all the p nodes in box and end our path at kth node.
+        Hence, with the help of dynamic programming, we are recursively calling solve function to calculate cost of traversing 
+        all nodes in box except k. Then we will traverse back from node p to k by taking the path that has minimum cost of all 
+        the available paths.
+    */
+
+    for (int p = 1; p <= num ; p++)
+        if ((box & (1 << p)) && p != k && p != 1)
+            answer = min(answer, solve(p, num, box & (~(1 << k))) + steps [p][k]);
+
+    return cache [k][box] = answer;
+}
+
+// This is the driver code to find minimum cost using the above defined solve function
+int main()
+{
+    int num, x, y;
+
+    cout << "Enter the no. nodes : ";
+    cin >> num;
+    cout << endl;
+
+    cout << "Now let's make a matrix of cost of going from one node to another node" << endl << endl;
+
+    // steps [x][y] represents the minimum steps or cost required to go from a node x to node y
+
+    for (x = 0; x < num+1; x++)
+    {
+        for (y = 0; y < num+1; y++)
+        {
+            if (x == y || x == 0 || y==0)
+            {
+                steps [x][y] = 0;
+                continue;
+            }
+
+            cout << "Enter the cost of going from node " << x << " to node " << y << " : ";
+            cin >> steps [x][y];
+            cout << endl;
+        }
+    }
+
+    cout << "The matrix of cost that you have entered is as follows : " << endl << endl;
+    cout << "   ";
+
+    for (x = 1;  x < num+1; x++)
+    cout << x << "\t";
+    cout << endl << endl;
+
+    for (x = 1; x < num+1; x++)
+    {
+        cout << x << "  ";
+
+        for (y = 1; y < num+1; y++)
+        {
+            cout << steps[x][y] << "\t";
+        }
+
+        cout << endl << endl;
+    }
+
+    int sol = maximum;
+
+    for (int q = 1; q <= num; q++)
+        /*
+            Here we are starting from node 1 and will keep traversing upto q.
+            After reaching at q, we will traverse back to node 1 by following the path that has minimum cost
+            of all available paths. 
+        */
+        sol = min(sol, solve(q, num, (1 << (num + 1)) - 1) + steps [q][1]);
+
+    cout << "The minimum cost/steps required to traverse through all the nodes = " << sol << endl << endl;
+
+    return 0;
+}
